@@ -95,4 +95,25 @@ class TestSSL < Test::Unit::TestCase
     assert_equal "https://ssl.example.org/path?key=value",
       last_response.headers['Location']
   end
+
+  def test_redirect_exclude_redirects_https_to_http
+    self.app = Rack::SSL.new(default_app, :exclude => lambda { |env| true }, :redirect_exclude => true)
+    get "https://example.org/"
+    assert_equal "http://example.org/", last_response.headers['Location']
+  end
+
+  def test_redirect_exclude_does_not_redirect_http
+    self.app = Rack::SSL.new(default_app, :exclude => lambda { |env| true }, :redirect_exclude => true)
+    get "http://example.org/"
+    assert last_response.ok?
+  end
+
+  def test_redirect_exclude_redirects_without_subdomain
+    self.app = Rack::SSL.new(default_app,
+                             :exclude => lambda { |env| true },
+                             :subdomain => "ssl",
+                             :redirect_exclude => true)
+    get "https://ssl.example.org/"
+    assert_equal "http://example.org/", last_response.headers['Location']
+  end
 end

@@ -18,11 +18,17 @@ module Rack
 
       @exclude   = options[:exclude]
       @subdomain = options[:subdomain]
+
+      @redirect_exclude = options[:redirect_exclude]
     end
 
     def call(env)
       if @exclude && @exclude.call(env)
-        @app.call(env)
+        if @redirect_exclude && scheme(env) == "https"
+          redirect_to_http(env)
+        else
+          @app.call(env)
+        end
       elsif scheme(env) == 'https'
         status, headers, body = @app.call(env)
         headers = hsts_headers.merge(headers)
@@ -50,6 +56,14 @@ module Rack
         location = "https://#{[@subdomain, req.host].compact.join('.')}#{req.fullpath}"
 
         [301, hsts_headers.merge({'Content-Type' => "text/html", 'Location' => location}), []]
+      end
+
+      def redirect_to_http(env)
+        req      = Request.new(env)
+        host     = @subdomain ? req.host.gsub(/^#{@subdomain}\./, '') : req.host
+        location = "http://#{host}#{req.fullpath}"
+
+        [301, {'Content-Type' => "text/html", 'Location' => location}, []]
       end
 
       # http://tools.ietf.org/html/draft-hodges-strict-transport-sec-02

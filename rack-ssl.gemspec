@@ -4,4 +4,5 @@ Gem::Specification.new do |s|
   s.platform     = Gem::Platform::RUBY
   s.files        = Dir.glob("{lib}/**/*") + %w[LICENSE README.md]
   s.require_path = 'lib'
+  s.summary      = "Force SSL/TLS in your app."
 end

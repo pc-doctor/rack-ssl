@@ -9,7 +9,7 @@ class TestSSL < Test::Unit::TestCase
   def default_app
     lambda { |env|
       headers = {'Content-Type' => "text/html"}
-      headers['Set-Cookie'] = "id=1; path=/\ntoken=abc; path=/; secure; HttpOnly"
+      headers['Set-Cookie'] = ["id=1; path=/", "token=abc; path=/; secure; HttpOnly"]
       [200, headers, ["OK"]]
     }
   end
@@ -78,7 +78,7 @@ class TestSSL < Test::Unit::TestCase
   def test_flag_cookies_as_secure
     get "https://example.org/"
     assert_equal ["id=1; path=/; secure", "token=abc; path=/; secure; HttpOnly"],
-      last_response.headers['Set-Cookie'].split("\n")
+      last_response.headers['Set-Cookie']
   end
 
   def test_no_cookies
